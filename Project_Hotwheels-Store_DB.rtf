@@ -1,0 +1,204 @@
+{\rtf1\ansi\ansicpg1252\cocoartf2818
+\cocoatextscaling0\cocoaplatform0{\fonttbl\f0\fswiss\fcharset0 Helvetica;}
+{\colortbl;\red255\green255\blue255;}
+{\*\expandedcolortbl;;}
+\paperw11900\paperh16840\margl1440\margr1440\vieww11520\viewh8400\viewkind0
+\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural\partightenfactor0
+
+\f0\fs24 \cf0 -- B\uc0\u7843 ng ng\u432 \u7901 i d\'f9ng v\'e0 ph\'e2n quy\u7873 n\
+CREATE TABLE `users` (\
+  `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT,\
+  `full_name` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,\
+  `email` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,\
+  `phone_number` varchar(15) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\
+  `password` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,\
+  `role` enum('customer','admin','manager') COLLATE utf8mb4_unicode_ci DEFAULT 'customer',\
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),\
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),\
+  PRIMARY KEY (`id`),\
+  UNIQUE KEY `email` (`email`),\
+  UNIQUE KEY `phone_number` (`phone_number`)\
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;\
+\
+-- B\uc0\u7843 ng \u273 \u7883 a ch\u7881  ng\u432 \u7901 i d\'f9ng\
+CREATE TABLE `user_addresses` (\
+  `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT,\
+  `user_id` int(10) UNSIGNED NOT NULL,\
+  `address_line` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,\
+  `city` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,\
+  `district` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,\
+  `ward` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,\
+  `is_default` tinyint(1) DEFAULT 0,\
+  PRIMARY KEY (`id`),\
+  KEY `user_addresses_user_id_foreign` (`user_id`),\
+  CONSTRAINT `user_addresses_user_id_foreign` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE\
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;\
+\
+-- B\uc0\u7843 ng danh m\u7909 c s\u7843 n ph\u7849 m\
+CREATE TABLE `categories` (\
+  `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT,\
+  `name` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,\
+  `slug` varchar(120) COLLATE utf8mb4_unicode_ci NOT NULL,\
+  `parent_id` int(10) UNSIGNED DEFAULT NULL,\
+  `description` text COLLATE utf8mb4_unicode_ci DEFAULT NULL,\
+  PRIMARY KEY (`id`),\
+  UNIQUE KEY `slug` (`slug`),\
+  KEY `categories_parent_id_foreign` (`parent_id`),\
+  CONSTRAINT `categories_parent_id_foreign` FOREIGN KEY (`parent_id`) REFERENCES `categories` (`id`) ON DELETE SET NULL\
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;\
+\
+-- B\uc0\u7843 ng s\u7843 n ph\u7849 m (\u272 \'c3 C\u7852 P NH\u7852 T)\
+CREATE TABLE `products` (\
+  `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT,\
+  `name` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,\
+  `slug` varchar(270) COLLATE utf8mb4_unicode_ci NOT NULL,\
+  `sku` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,\
+  `description` text COLLATE utf8mb4_unicode_ci DEFAULT NULL,\
+  `price` decimal(12,2) NOT NULL,\
+  `sale_price` decimal(12,2) DEFAULT NULL, -- C\uc0\u7897 t th\'eam cho ch\u7913 c n\u259 ng SALE\
+  `stock_quantity` int(10) UNSIGNED NOT NULL,\
+  `is_active` tinyint(1) NOT NULL DEFAULT 1, -- C\uc0\u7897 t th\'eam cho ch\u7913 c n\u259 ng "x\'f3a m\u7873 m"\
+  `is_recommended` tinyint(1) NOT NULL DEFAULT 0, -- C\uc0\u7897 t th\'eam cho ch\u7913 c n\u259 ng "RECOMMENDED"\
+  `category_id` int(10) UNSIGNED DEFAULT NULL,\
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),\
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),\
+  PRIMARY KEY (`id`),\
+  UNIQUE KEY `slug` (`slug`),\
+  UNIQUE KEY `sku` (`sku`),\
+  KEY `products_category_id_foreign` (`category_id`),\
+  CONSTRAINT `products_category_id_foreign` FOREIGN KEY (`category_id`) REFERENCES `categories` (`id`) ON DELETE SET NULL\
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;\
+\
+-- B\uc0\u7843 ng h\'ecnh \u7843 nh s\u7843 n ph\u7849 m\
+CREATE TABLE `product_images` (\
+  `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT,\
+  `product_id` int(10) UNSIGNED NOT NULL,\
+  `image_url` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,\
+  `is_thumbnail` tinyint(1) DEFAULT 0,\
+  PRIMARY KEY (`id`),\
+  KEY `product_images_product_id_foreign` (`product_id`),\
+  CONSTRAINT `product_images_product_id_foreign` FOREIGN KEY (`product_id`) REFERENCES `products` (`id`) ON DELETE CASCADE\
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;\
+\
+-- B\uc0\u7843 ng \u273 \u417 n h\'e0ng\
+CREATE TABLE `orders` (\
+  `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT,\
+  `user_id` int(10) UNSIGNED NOT NULL,\
+  `order_code` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL,\
+  `total_amount` decimal(12,2) NOT NULL,\
+  `shipping_address` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,\
+  `shipping_fee` decimal(10,2) DEFAULT 0.00,\
+  `payment_method` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,\
+  `status` enum('pending','confirmed','shipping','completed','cancelled') COLLATE utf8mb4_unicode_ci DEFAULT 'pending',\
+  `notes` text COLLATE utf8mb4_unicode_ci DEFAULT NULL,\
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),\
+  PRIMARY KEY (`id`),\
+  UNIQUE KEY `order_code` (`order_code`),\
+  KEY `orders_user_id_foreign` (`user_id`),\
+  CONSTRAINT `orders_user_id_foreign` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE\
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;\
+\
+-- B\uc0\u7843 ng chi ti\u7871 t \u273 \u417 n h\'e0ng\
+CREATE TABLE `order_items` (\
+  `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT,\
+  `order_id` int(10) UNSIGNED NOT NULL,\
+  `product_id` int(10) UNSIGNED NOT NULL,\
+  `quantity` int(10) UNSIGNED NOT NULL,\
+  `price` decimal(12,2) NOT NULL,\
+  PRIMARY KEY (`id`),\
+  KEY `order_items_order_id_foreign` (`order_id`),\
+  KEY `order_items_product_id_foreign` (`product_id`),\
+  CONSTRAINT `order_items_order_id_foreign` FOREIGN KEY (`order_id`) REFERENCES `orders` (`id`) ON DELETE CASCADE,\
+  CONSTRAINT `order_items_product_id_foreign` FOREIGN KEY (`product_id`) REFERENCES `products` (`id`)\
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;\
+\
+-- B\uc0\u7843 ng \u273 \'e1nh gi\'e1 s\u7843 n ph\u7849 m\
+CREATE TABLE `reviews` (\
+  `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT,\
+  `product_id` int(10) UNSIGNED NOT NULL,\
+  `user_id` int(10) UNSIGNED NOT NULL,\
+  `rating` tinyint(3) UNSIGNED NOT NULL,\
+  `comment` text COLLATE utf8mb4_unicode_ci DEFAULT NULL,\
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),\
+  PRIMARY KEY (`id`),\
+  KEY `reviews_product_id_foreign` (`product_id`),\
+  KEY `reviews_user_id_foreign` (`user_id`),\
+  CONSTRAINT `reviews_product_id_foreign` FOREIGN KEY (`product_id`) REFERENCES `products` (`id`) ON DELETE CASCADE,\
+  CONSTRAINT `reviews_user_id_foreign` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE\
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;\
+\
+-- B\uc0\u7843 ng danh s\'e1ch y\'eau th\'edch\
+CREATE TABLE `wishlists` (\
+  `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT,\
+  `user_id` int(10) UNSIGNED NOT NULL,\
+  `product_id` int(10) UNSIGNED NOT NULL,\
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),\
+  PRIMARY KEY (`id`),\
+  UNIQUE KEY `wishlists_user_id_product_id_unique` (`user_id`,`product_id`),\
+  KEY `wishlists_product_id_foreign` (`product_id`),\
+  CONSTRAINT `wishlists_product_id_foreign` FOREIGN KEY (`product_id`) REFERENCES `products` (`id`) ON DELETE CASCADE,\
+  CONSTRAINT `wishlists_user_id_foreign` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE\
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;\
+\
+-- B\uc0\u7843 ng m\'e3 gi\u7843 m gi\'e1\
+CREATE TABLE `vouchers` (\
+  `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT,\
+  `code` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,\
+  `discount_type` enum('fixed','percent') COLLATE utf8mb4_unicode_ci NOT NULL,\
+  `discount_value` decimal(10,2) NOT NULL,\
+  `max_usage` int(10) UNSIGNED DEFAULT NULL,\
+  `current_usage` int(10) UNSIGNED DEFAULT 0,\
+  `start_date` datetime NOT NULL,\
+  `end_date` datetime NOT NULL,\
+  `is_active` tinyint(1) DEFAULT 1,\
+  PRIMARY KEY (`id`),\
+  UNIQUE KEY `code` (`code`)\
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;\
+\
+-- B\uc0\u7843 ng li\'ean k\u7871 t \u273 \u417 n h\'e0ng v\'e0 m\'e3 gi\u7843 m gi\'e1\
+CREATE TABLE `order_vouchers` (\
+  `order_id` int(10) UNSIGNED NOT NULL,\
+  `voucher_id` int(10) UNSIGNED NOT NULL,\
+  PRIMARY KEY (`order_id`,`voucher_id`),\
+  KEY `order_vouchers_voucher_id_foreign` (`voucher_id`),\
+  CONSTRAINT `order_vouchers_order_id_foreign` FOREIGN KEY (`order_id`) REFERENCES `orders` (`id`),\
+  CONSTRAINT `order_vouchers_voucher_id_foreign` FOREIGN KEY (`voucher_id`) REFERENCES `vouchers` (`id`)\
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;\
+\
+-- B\uc0\u7843 ng qu\u7843 n l\'fd n\u7897 i dung (CMS)\
+CREATE TABLE `cms_pages` (\
+  `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT,\
+  `title` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,\
+  `slug` varchar(270) COLLATE utf8mb4_unicode_ci NOT NULL,\
+  `content` text COLLATE utf8mb4_unicode_ci DEFAULT NULL,\
+  `author_id` int(10) UNSIGNED DEFAULT NULL,\
+  `type` enum('page','post') COLLATE utf8mb4_unicode_ci DEFAULT 'page',\
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),\
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),\
+  PRIMARY KEY (`id`),\
+  UNIQUE KEY `slug` (`slug`),\
+  KEY `cms_pages_author_id_foreign` (`author_id`),\
+  CONSTRAINT `cms_pages_author_id_foreign` FOREIGN KEY (`author_id`) REFERENCES `users` (`id`) ON DELETE SET NULL\
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;\
+\
+-- B\uc0\u7843 ng th\'f4ng b\'e1o\
+CREATE TABLE `notifications` (\
+  `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT,\
+  `user_id` int(10) UNSIGNED NOT NULL,\
+  `title` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,\
+  `message` text COLLATE utf8mb4_unicode_ci DEFAULT NULL,\
+  `is_read` tinyint(1) DEFAULT 0,\
+  `link` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),\
+  PRIMARY KEY (`id`),\
+  KEY `notifications_user_id_foreign` (`user_id`),\
+  CONSTRAINT `notifications_user_id_foreign` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE\
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;\
+\
+-- B\uc0\u7843 ng reset m\u7853 t kh\u7849 u (B\u7842 NG M\u7898 I)\
+CREATE TABLE `password_resets` (\
+  `email` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,\
+  `token` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,\
+  `expires_at` datetime NOT NULL,\
+  PRIMARY KEY (`email`)\
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;}
